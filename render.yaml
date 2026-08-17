@@ -1,0 +1,28 @@
+# Deploy com um clique no Render (https://render.com)
+# 1. Suba este projeto para um repositório Git (GitHub/GitLab).
+# 2. No Render: New > Blueprint > selecione o repositório.
+# 3. O Render lê este arquivo e cria o serviço automaticamente.
+# 4. O disco persistente guarda o banco (SQLite) e os arquivos anexados,
+#    para não se perderem a cada novo deploy.
+services:
+  - type: web
+    name: sgpa-miguel-leao
+    runtime: docker
+    plan: starter
+    region: oregon
+    healthCheckPath: /login
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DATA_DIR
+        value: /app/storage/data
+      - key: UPLOAD_DIR
+        value: /app/storage/uploads
+    disk:
+      name: sgpa-storage
+      mountPath: /app/storage
+      sizeGB: 5

@@ -1,0 +1,24 @@
+<% var titulo = 'Catálogo de Documentos' %>
+<%- include('partials_head') %>
+
+<h1>Catálogo dos 26 Documentos Padrão</h1>
+<p class="ajuda">Numerados na ordem de uso do processo, conforme o Pacote de Gestão da Despesa Pública da Prefeitura Municipal de Miguel Leão/PI.</p>
+
+<% var blocoAtual = null %>
+<% tipos.forEach(function(t){ %>
+  <% if (t.bloco !== blocoAtual) { blocoAtual = t.bloco; %>
+    <h2 class="bloco-titulo">Bloco <%= t.bloco %> — <%= t.bloco_nome %></h2>
+  <% } %>
+  <div class="card card-doc">
+    <h4><%= t.codigo %> — <%= t.nome %> <% if (t.obrigatorio) { %><span class="tag-obrigatorio">obrigatório</span><% } %></h4>
+    <p class="ajuda"><%= t.descricao %></p>
+    <p class="ajuda">Aplica-se a: <%= t.aplica_servico ? 'serviços' : '' %><%= t.aplica_servico && t.aplica_material ? ' e ' : '' %><%= t.aplica_material ? 'materiais/bens' : '' %><% if(!t.aplica_servico && !t.aplica_material){ %>uso geral<% } %></p>
+    <% if (t.checklist.length) { %>
+      <details><summary>Itens de checklist orientativo</summary>
+        <ul><% t.checklist.forEach(function(i){ %><li><%= i %></li><% }) %></ul>
+      </details>
+    <% } %>
+  </div>
+<% }) %>
+
+<%- include('partials_foot') %>

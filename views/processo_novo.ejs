@@ -1,0 +1,35 @@
+<% var titulo = 'Novo Processo' %>
+<%- include('partials_head') %>
+
+<div class="card card-form">
+  <h1>Abrir Novo Processo</h1>
+  <p class="ajuda">O número do processo é gerado automaticamente pelo sistema (padrão PML-AAAA-NNNNNN), seguindo a ordem de abertura do ano corrente.</p>
+  <% if (erro) { %><div class="alert alert-erro"><%= erro %></div><% } %>
+  <form method="post" action="/processos">
+    <label>Natureza do objeto *</label>
+    <select name="tipo_objeto" required>
+      <option value="servico">Prestação de serviço</option>
+      <option value="material">Fornecimento de materiais/bens</option>
+      <option value="obra">Obra / serviço de engenharia</option>
+    </select>
+
+    <label>Objeto (descrição resumida) *</label>
+    <textarea name="objeto" rows="3" required placeholder="Ex.: Aquisição de material de expediente para a Secretaria de Educação"></textarea>
+
+    <label>Secretaria / setor requisitante *</label>
+    <input type="text" name="secretaria" required placeholder="Ex.: Secretaria de Educação">
+
+    <label>Contratado / Fornecedor</label>
+    <input type="text" name="contratado_nome" placeholder="Razão social">
+
+    <label>CNPJ/CPF do contratado</label>
+    <input type="text" name="contratado_documento">
+
+    <label>Valor estimado (R$)</label>
+    <input type="number" step="0.01" name="valor">
+
+    <button type="submit" class="btn btn-primary">Criar processo</button>
+  </form>
+</div>
+
+<%- include('partials_foot') %>

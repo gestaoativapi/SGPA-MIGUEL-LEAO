@@ -1,0 +1,18 @@
+<% var titulo = 'Login' %>
+<%- include('partials_head', { usuario: null }) %>
+<div class="login-wrap">
+  <div class="login-card">
+    <img class="login-logo" src="/public/img/logo-horizontal-cor.png" alt="Ativa.One">
+    <h1>SGPA — Processos Administrativos</h1>
+    <p class="subtitle">Prefeitura Municipal de Miguel Leão/PI</p>
+    <% if (erro) { %><div class="alert alert-erro"><%= erro %></div><% } %>
+    <form method="post" action="/login">
+      <label>E-mail institucional</label>
+      <input type="email" name="email" required autofocus>
+      <label>Senha</label>
+      <input type="password" name="senha" required>
+      <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+    </form>
+  </div>
+</div>
+<%- include('partials_foot') %>

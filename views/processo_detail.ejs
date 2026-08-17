@@ -1,0 +1,164 @@
+<% var titulo = processo.numero %>
+<%- include('partials_head') %>
+
+<div class="page-header">
+  <div>
+    <h1><%= processo.numero %> <span class="status status-<%= processo.status %>"><%= processo.status %></span></h1>
+    <p class="ajuda"><%= processo.objeto %></p>
+  </div>
+  <% if (podeArquivar) { %>
+  <form method="post" action="/processos/<%= processo.numero %>/status" class="inline-form">
+    <select name="status" onchange="this.form.submit()">
+      <% ['aberto','pendente','concluido','arquivado'].forEach(function(s){ %>
+        <option value="<%= s %>" <%= processo.status === s ? 'selected' : '' %>><%= s %></option>
+      <% }) %>
+    </select>
+  </form>
+  <% } %>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <h3>Dados do processo</h3>
+    <table class="kv">
+      <tr><td>Secretaria</td><td><%= processo.secretaria %></td></tr>
+      <tr><td>Natureza</td><td><%= processo.tipo_objeto %></td></tr>
+      <tr><td>Contratado</td><td><%= processo.contratado_nome || '—' %></td></tr>
+      <tr><td>CNPJ/CPF</td><td><%= processo.contratado_documento || '—' %></td></tr>
+      <tr><td>Valor</td><td><%= processo.valor ? 'R$ ' + processo.valor.toFixed(2) : '—' %></td></tr>
+      <tr><td>Aberto em</td><td><%= dayjs(processo.criado_em).format('DD/MM/YYYY HH:mm') %></td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Conformidade — documentos obrigatórios</h3>
+    <div class="barra-progresso grande"><div class="barra-progresso-fill" style="width: <%= pendencias.percentual %>%"></div></div>
+    <p><%= pendencias.obrigatoriosAtendidos %> de <%= pendencias.totalObrigatorios %> documentos obrigatórios anexados (<%= pendencias.percentual %>%)</p>
+
+    <% if (pendencias.tiposFaltando.length > 0) { %>
+      <div class="alert alert-aviso">
+        <strong>Para regularizar este processo, ainda falta anexar:</strong>
+        <ul>
+          <% pendencias.tiposFaltando.forEach(function(t){ %>
+            <li><strong><%= t.codigo %></strong> — <%= t.nome %></li>
+          <% }) %>
+        </ul>
+        <p class="ajuda">Isso não bloqueia o processo — é apenas um aviso para regularização.</p>
+      </div>
+    <% } else { %>
+      <div class="alert alert-ok">Todos os documentos obrigatórios foram anexados.</div>
+    <% } %>
+
+    <% if (pendencias.itensChecklistPendentes.length > 0) { %>
+      <details class="detalhes-pendencias">
+        <summary><%= pendencias.itensChecklistPendentes.length %> item(ns) de checklist pendente(s) dentro dos documentos já enviados</summary>
+        <ul>
+          <% pendencias.itensChecklistPendentes.forEach(function(i){ %>
+            <li>[<%= i.tipo_codigo %>] <%= i.tipo_nome %> — <%= i.item %></li>
+          <% }) %>
+        </ul>
+      </details>
+    <% } %>
+  </div>
+</div>
+
+<% if (podeEnviar) { %>
+<div class="card">
+  <h3>Anexar documento</h3>
+  <form method="post" action="/processos/<%= processo.numero %>/documentos" enctype="multipart/form-data" id="form-upload">
+    <label>Tipo de documento *</label>
+    <select name="tipo_codigo" id="select-tipo" required onchange="mostrarChecklist(this.value)">
+      <option value="">Selecione…</option>
+      <% blocos.forEach(function(b){ %>
+        <optgroup label="Bloco <%= b.bloco %> — <%= b.bloco_nome %>">
+          <% b.tipos.forEach(function(t){ %>
+            <option value="<%= t.codigo %>" <%= t.obrigatorio ? 'data-obrigatorio="1"' : '' %>><%= t.codigo %> — <%= t.nome %></option>
+          <% }) %>
+        </optgroup>
+      <% }) %>
+    </select>
+
+    <label>Arquivo *</label>
+    <input type="file" name="arquivo" required>
+
+    <div id="checklist-dinamico"></div>
+
+    <label><input type="checkbox" name="permite_download" checked> Permitir download deste arquivo (desmarque para deixar somente consulta/visualização)</label>
+
+    <label>Observações</label>
+    <textarea name="observacoes" rows="2" placeholder="Opcional"></textarea>
+
+    <button type="submit" class="btn btn-primary">Enviar documento</button>
+  </form>
+</div>
+<% } %>
+
+<% blocos.forEach(function(b){ %>
+  <div class="card">
+    <h3>Bloco <%= b.bloco %> — <%= b.bloco_nome %></h3>
+    <table class="tabela tabela-docs">
+      <thead><tr><th>Nº</th><th>Documento</th><th>Status</th><th>Arquivo(s)</th></tr></thead>
+      <tbody>
+      <% b.tipos.forEach(function(t){ %>
+        <% var docs = documentosPorTipo[t.codigo] || []; %>
+        <tr>
+          <td><%= t.codigo %></td>
+          <td><%= t.nome %> <% if (t.obrigatorio) { %><span class="tag-obrigatorio">obrigatório</span><% } %></td>
+          <td><%= docs.length > 0 ? '✅ anexado' : (t.obrigatorio ? '⚠️ pendente' : '—') %></td>
+          <td>
+            <% if (docs.length === 0) { %> — <% } %>
+            <% docs.forEach(function(d){ %>
+              <div class="doc-item">
+                <a href="/documentos/<%= d.id %>/visualizar" target="_blank"><%= d.nome_sistema %></a>
+                <span class="ajuda">(v<%= d.versao %> · <%= dayjs(d.enviado_em).format('DD/MM/YYYY HH:mm') %> · <%= d.enviado_por_nome %>)</span>
+                <% if (podeBaixarFn(d)) { %>
+                  <a class="btn btn-mini" href="/documentos/<%= d.id %>/download">Baixar</a>
+                <% } else { %>
+                  <span class="badge badge-bloqueado">só consulta</span>
+                <% } %>
+                <% if (podeAlterarPermissao) { %>
+                  <form method="post" action="/documentos/<%= d.id %>/permissao" class="inline-form">
+                    <button type="submit" class="link-btn">
+                      <%= d.permite_download ? 'bloquear download' : 'liberar download' %>
+                    </button>
+                  </form>
+                <% } %>
+              </div>
+            <% }) %>
+          </td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+  </div>
+<% }) %>
+
+<div class="card">
+  <h3>Histórico do processo</h3>
+  <ul class="log-lista">
+    <% eventos.forEach(function(e){ %>
+      <li><span class="ajuda"><%= dayjs(e.criado_em).format('DD/MM/YYYY HH:mm') %></span> — <%= e.evento %> <% if (e.usuario_nome) { %>por <%= e.usuario_nome %><% } %> <% if(e.detalhes){ %><em><%= e.detalhes %></em><% } %></li>
+    <% }) %>
+  </ul>
+</div>
+
+<script>
+  var CHECKLISTS = <%- JSON.stringify(Object.fromEntries(blocos.flatMap(b => b.tipos.map(t => [t.codigo, t.checklist])))) %>;
+  function mostrarChecklist(codigo) {
+    var div = document.getElementById('checklist-dinamico');
+    var itens = CHECKLISTS[codigo] || [];
+    if (itens.length === 0) { div.innerHTML = ''; return; }
+    var html = '<div class="checklist-box"><strong>Checklist deste documento (preenchimento livre — apenas orientativo):</strong>';
+    itens.forEach(function(item, idx) {
+      var name = 'check__' + idx;
+      html += '<div class="checklist-item"><span>' + item + '</span>' +
+        '<label><input type="radio" name="' + name + '" value="sim"> OK</label>' +
+        '<label><input type="radio" name="' + name + '" value="nao"> Pendente</label>' +
+        '<label><input type="radio" name="' + name + '" value="na" checked> N/A</label></div>';
+    });
+    html += '</div>';
+    div.innerHTML = html;
+  }
+</script>
+
+<%- include('partials_foot') %>

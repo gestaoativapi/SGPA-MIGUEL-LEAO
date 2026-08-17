@@ -1,0 +1,41 @@
+<% var titulo = 'Usuários' %>
+<%- include('partials_head') %>
+
+<h1>Usuários do Sistema</h1>
+<% if (erro) { %><div class="alert alert-erro"><%= erro %></div><% } %>
+
+<div class="card">
+  <h3>Novo usuário</h3>
+  <form method="post" action="/admin/usuarios" class="form-linha">
+    <input type="text" name="nome" placeholder="Nome completo" required>
+    <input type="email" name="email" placeholder="E-mail institucional" required>
+    <input type="password" name="senha" placeholder="Senha inicial" required>
+    <select name="papel" required>
+      <% Object.entries(PAPEIS).forEach(function(e){ %><option value="<%= e[0] %>"><%= e[1] %></option><% }) %>
+    </select>
+    <input type="text" name="secretaria" placeholder="Secretaria/setor">
+    <button class="btn btn-primary" type="submit">Criar</button>
+  </form>
+</div>
+
+<table class="tabela">
+  <thead><tr><th>Nome</th><th>E-mail</th><th>Papel</th><th>Secretaria</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  <% usuarios.forEach(function(u){ %>
+    <tr>
+      <td><%= u.nome %></td>
+      <td><%= u.email %></td>
+      <td><%= PAPEIS[u.papel] || u.papel %></td>
+      <td><%= u.secretaria || '—' %></td>
+      <td><%= u.ativo ? 'ativo' : 'inativo' %></td>
+      <td>
+        <form method="post" action="/admin/usuarios/<%= u.id %>/toggle">
+          <button class="link-btn" type="submit"><%= u.ativo ? 'desativar' : 'ativar' %></button>
+        </form>
+      </td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+
+<%- include('partials_foot') %>

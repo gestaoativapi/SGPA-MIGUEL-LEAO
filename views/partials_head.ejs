@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><%= typeof titulo !== 'undefined' ? titulo + ' — SGPA Miguel Leão' : 'SGPA — Prefeitura de Miguel Leão' %></title>
+<link rel="icon" type="image/png" href="/public/img/favicon-512.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/public/css/style.css">
+</head>
+<body>
+<% if (usuario) { %>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/">
+      <img src="/public/img/logo-horizontal-reverso-branco.png" alt="Ativa.One">
+      <span class="system-name">SGPA · Prefeitura Municipal de Miguel Leão/PI</span>
+    </a>
+    <nav>
+      <a href="/">Processos</a>
+      <a href="/catalogo">Catálogo de Documentos</a>
+      <% if (usuario.papel === 'admin') { %><a href="/admin/usuarios">Usuários</a><% } %>
+    </nav>
+    <div class="user-box">
+      <span><%= usuario.nome %> · <span class="badge"><%= PAPEIS[usuario.papel] %></span></span>
+      <form method="post" action="/logout" style="display:inline"><button class="link-btn" type="submit">Sair</button></form>
+    </div>
+  </div>
+</header>
+<% } %>
+<main class="container">

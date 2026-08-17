@@ -1,0 +1,61 @@
+<% var titulo = 'Processos' %>
+<%- include('partials_head') %>
+
+<div class="page-header">
+  <h1>Processos Administrativos</h1>
+  <a href="/processos/novo" class="btn btn-primary">+ Novo Processo</a>
+</div>
+
+<div class="cards-resumo">
+  <div class="mini-card"><span class="num"><%= resumo.total %></span><span class="lbl">Total</span></div>
+  <div class="mini-card"><span class="num"><%= resumo.abertos %></span><span class="lbl">Abertos</span></div>
+  <div class="mini-card mini-card-alerta"><span class="num"><%= resumo.pendentes %></span><span class="lbl">Com pendência</span></div>
+  <div class="mini-card mini-card-ok"><span class="num"><%= resumo.concluidos %></span><span class="lbl">Concluídos/Arquivados</span></div>
+</div>
+
+<form class="filtros" method="get" action="/">
+  <input type="text" name="q" placeholder="Buscar por número, objeto ou contratado" value="<%= filtros.q || '' %>">
+  <select name="status">
+    <option value="">Todos os status</option>
+    <% ['aberto','pendente','concluido','arquivado'].forEach(function(s){ %>
+      <option value="<%= s %>" <%= filtros.status === s ? 'selected' : '' %>><%= s %></option>
+    <% }) %>
+  </select>
+  <select name="secretaria">
+    <option value="">Todas as secretarias</option>
+    <% secretarias.forEach(function(s){ %>
+      <option value="<%= s %>" <%= filtros.secretaria === s ? 'selected' : '' %>><%= s %></option>
+    <% }) %>
+  </select>
+  <button class="btn btn-secundario" type="submit">Filtrar</button>
+</form>
+
+<table class="tabela">
+  <thead>
+    <tr><th>Nº do Processo</th><th>Objeto</th><th>Secretaria</th><th>Natureza</th><th>Fase</th><th>Status</th><th>Conformidade</th><th></th></tr>
+  </thead>
+  <tbody>
+  <% if (processos.length === 0) { %>
+    <tr><td colspan="8">Nenhum processo encontrado.</td></tr>
+  <% } %>
+  <% processos.forEach(function(p) { %>
+    <tr>
+      <td><a href="/processos/<%= p.numero %>"><%= p.numero %></a></td>
+      <td><%= p.objeto %></td>
+      <td><%= p.secretaria %></td>
+      <td><%= p.tipo_objeto %></td>
+      <td>Fase <%= p.fase_atual %>/7</td>
+      <td><span class="status status-<%= p.status %>"><%= p.status %></span></td>
+      <td>
+        <div class="barra-progresso" title="<%= p.pendencias.obrigatoriosAtendidos %>/<%= p.pendencias.totalObrigatorios %> documentos obrigatórios">
+          <div class="barra-progresso-fill" style="width: <%= p.pendencias.percentual %>%"></div>
+        </div>
+        <span class="progresso-txt"><%= p.pendencias.percentual %>%</span>
+      </td>
+      <td><a href="/processos/<%= p.numero %>" class="btn btn-mini">Abrir</a></td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+
+<%- include('partials_foot') %>
